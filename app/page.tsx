@@ -28,7 +28,6 @@ export default function LoginPage() {
       }
     })();
   }, []);
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -41,11 +40,19 @@ export default function LoginPage() {
       // Redirect on success
       router.push('/dashboard');
     } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string; errors?: any }>;
+      // The corrected type is used here
+      const axiosError = err as AxiosError<{
+        message?: string;
+        errors?: Record<string, string[]>;
+      }>;
+
+      // With the fix above, the 'as' cast on the next line is no longer needed,
+      // making the code cleaner, but it's fine to leave it.
+      const errors = axiosError.response?.data?.errors;
+
       const errorMessage =
         axiosError.response?.data?.message ||
-        (axiosError.response?.data?.errors &&
-          Object.values(axiosError.response?.data?.errors)[0]) ||
+        (errors && Object.values(errors).flat()[0]) ||
         'Login failed. Please check credentials.';
 
       setError(errorMessage as string);
