@@ -1,4 +1,3 @@
-// src/app/page.tsx
 'use client';
 
 import { useState, FormEvent, useEffect } from 'react';
@@ -17,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Get the necessary security cookie when the page loads
   useEffect(() => {
     getCsrfToken();
   }, []);
@@ -27,14 +27,13 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // This call now sets a session cookie
+      // This call now logs the user in and sets a session cookie in the browser
       await apiClient.post('/login', { email, password });
 
-      // On success, redirect to the dashboard
+      // On success, we just redirect. The browser handles the session automatically.
       router.push('/dashboard');
 
     } catch (err) {
-      // This is the corrected part
       const axiosError = err as AxiosError<{ message?: string }>;
       const errorMessage = axiosError.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);

@@ -2,10 +2,10 @@ import axios from 'axios';
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  withCredentials: true, // This is the crucial line for cookie-based auth
+  withCredentials: true, // This enables sending and receiving cookies
 });
 
-// Function to get the CSRF cookie
+// This function asks the backend for the initial security cookie
 export const getCsrfToken = async () => {
   try {
     await apiClient.get('/sanctum/csrf-cookie');

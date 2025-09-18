@@ -39,7 +39,6 @@ export default function TestimonialsPage() {
   const [editMessage, setEditMessage] = useState('');
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
