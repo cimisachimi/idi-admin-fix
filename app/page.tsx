@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Get the necessary security cookie when the page loads
+  // Get the security cookie when the page loads
   useEffect(() => {
     getCsrfToken();
   }, []);
@@ -27,15 +27,15 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // This call now logs the user in and sets a session cookie in the browser
+      // This call now logs the user in by setting a session cookie
       await apiClient.post('/login', { email, password });
 
-      // On success, we just redirect. The browser handles the session automatically.
+      // On success, redirect. The browser now handles the session.
       router.push('/dashboard');
 
     } catch (err) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      const errorMessage = axiosError.response?.data?.message || 'Login failed. Please check your credentials.';
+      const errorMessage = axiosError.response?.data?.message || 'Login failed. Please check credentials.';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -52,23 +52,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
