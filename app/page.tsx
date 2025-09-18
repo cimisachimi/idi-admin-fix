@@ -1,9 +1,8 @@
-// src/app/page.tsx
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react'; // Import useEffect
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import apiClient, { getCsrfToken } from './lib/apiCLient'; // Import getCsrfToken
+import apiClient, { getCsrfToken } from './lib/apiCLient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,9 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AxiosError } from 'axios';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@example.com');
+  const [password, setPassword] = useState('password'); // Use the correct default password
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   // Get the CSRF token when the component mounts
@@ -23,31 +23,28 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
 
-    // You can optionally call it again here for good measure,
-    // but the useEffect is usually sufficient.
-    // await getCsrfToken();
-
     try {
-      const res = await apiClient.post('/login', { email, password });
-      if (res.data.access_token) {
-        localStorage.setItem('token', res.data.access_token);
-        router.push('/dashboard');
-      }
+      // This call now sets a session cookie instead of returning a token
+      await apiClient.post('/login', { email, password });
+
+      // On success, we just redirect. The browser now has the session cookie.
+      router.push('/dashboard');
+
     } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      const errorMessage = axiosError.response?.data?.message || 'Login failed. Please check your credentials.';
+      const axiosError = err as AxiosError<{ message?: string; errors?: any }>;
+      const errorMessage =
+        axiosError.response?.data?.message ||
+        'Login failed. Please check your credentials.';
       setError(errorMessage);
-      console.error('Login error:', {
-        status: axiosError.response?.status,
-        data: axiosError.response?.data,
-        message: axiosError.message,
-      });
+      console.error('Login error:', axiosError.response);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ... the rest of your component remains the same
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md">
@@ -77,8 +74,8 @@ export default function LoginPage() {
               />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
         </CardContent>
