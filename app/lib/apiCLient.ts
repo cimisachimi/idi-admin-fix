@@ -13,5 +13,13 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
-
+// Function to get the CSRF cookie
+export const getCsrfToken = async () => {
+  try {
+    await apiClient.get('/sanctum/csrf-cookie');
+    console.log('CSRF cookie set');
+  } catch (error) {
+    console.error('Failed to get CSRF token', error);
+  }
+};
 export default apiClient;

@@ -1,14 +1,14 @@
 // src/app/page.tsx
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react'; // Import useEffect
 import { useRouter } from 'next/navigation';
-import apiClient from './lib/apiCLient';
+import apiClient, { getCsrfToken } from './lib/apiCLient'; // Import getCsrfToken
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AxiosError } from 'axios'; // Import AxiosError
+import { AxiosError } from 'axios';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,9 +16,18 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
+  // Get the CSRF token when the component mounts
+  useEffect(() => {
+    getCsrfToken();
+  }, []);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // You can optionally call it again here for good measure,
+    // but the useEffect is usually sufficient.
+    // await getCsrfToken();
 
     try {
       const res = await apiClient.post('/login', { email, password });
@@ -27,7 +36,7 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string }>; // Berikan tipe yang spesifik
+      const axiosError = err as AxiosError<{ message?: string }>;
       const errorMessage = axiosError.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
       console.error('Login error:', {
@@ -37,7 +46,8 @@ export default function LoginPage() {
       });
     }
   };
-  // ... sisa komponen Anda tidak berubah
+
+  // ... the rest of your component remains the same
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md">
