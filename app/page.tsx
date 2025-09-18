@@ -1,3 +1,4 @@
+// src/app/page.tsx
 'use client';
 
 import { useState, FormEvent, useEffect } from 'react';
@@ -10,13 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AxiosError } from 'axios';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password'); // Use the correct default password
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Get the CSRF token when the component mounts
   useEffect(() => {
     getCsrfToken();
   }, []);
@@ -27,19 +27,17 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // This call now sets a session cookie instead of returning a token
+      // This call now sets a session cookie
       await apiClient.post('/login', { email, password });
 
-      // On success, we just redirect. The browser now has the session cookie.
+      // On success, redirect to the dashboard
       router.push('/dashboard');
 
     } catch (err) {
-      const axiosError = err as AxiosError<{ message?: string; errors?: any }>;
-      const errorMessage =
-        axiosError.response?.data?.message ||
-        'Login failed. Please check your credentials.';
+      // This is the corrected part
+      const axiosError = err as AxiosError<{ message?: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);
-      console.error('Login error:', axiosError.response);
     } finally {
       setLoading(false);
     }

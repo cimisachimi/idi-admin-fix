@@ -1,25 +1,27 @@
-// src/app/logout/page.tsx
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import apiClient from '../lib/apiCLient';
 
 export default function LogoutPage() {
+  const router = useRouter();
+
   useEffect(() => {
     const logout = async () => {
       try {
+        // This call will invalidate the session cookie
         await apiClient.post('/logout');
       } catch (error) {
-        console.error("Logout failed", error);
+        console.error('Logout failed, but proceeding to log out client-side.', error);
       } finally {
-        // Always remove token and redirect to login page
-        localStorage.removeItem('token');
-        window.location.href = '/';
+        // Redirect to login page
+        router.push('/');
       }
     };
 
     logout();
-  }, []);
+  }, [router]);
 
   return <p>Logging out...</p>;
 }
