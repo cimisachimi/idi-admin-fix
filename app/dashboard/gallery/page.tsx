@@ -2,12 +2,14 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import Image from 'next/image'; // Import Image dari Next.js
 import { GalleryImage } from '@/types';
 import apiClient from '../../lib/apiCLient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AxiosError } from 'axios'; // Import AxiosError
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -22,10 +24,11 @@ export default function GalleryPage() {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await apiClient.get<GalleryImage[]>('/api/galleries');
+        const response = await apiClient.get<GalleryImage[]>('/galleries');
         setImages(response.data);
-      } catch (err: any) {
-        if (err.response?.status === 401) {
+      } catch (err) {
+        const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+        if (axiosError.response?.status === 401) {
           setError('Unauthorized. Please login again.');
         } else {
           setError('Failed to fetch images.');
@@ -50,7 +53,7 @@ export default function GalleryPage() {
     formData.append('image', imageFile);
 
     try {
-      const response = await apiClient.post<GalleryImage>('/api/galleries', formData, {
+      const response = await apiClient.post<GalleryImage>('/galleries', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -62,8 +65,9 @@ export default function GalleryPage() {
       if (fileInput) {
         fileInput.value = '';
       }
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (err) {
+      const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+      if (axiosError.response?.status === 401) {
         setError('Unauthorized. Please login again.');
       } else {
         setError('Failed to upload image.');
@@ -74,10 +78,11 @@ export default function GalleryPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure?')) return;
     try {
-      await apiClient.delete(`/api/galleries/${id}`);
+      await apiClient.delete(`/galleries/${id}`);
       setImages(images.filter((img) => img.id !== id));
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (err) {
+      const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+      if (axiosError.response?.status === 401) {
         setError('Unauthorized. Please login again.');
       } else {
         setError('Failed to delete image.');
@@ -87,6 +92,7 @@ export default function GalleryPage() {
 
   if (loading) return <p>Loading...</p>;
 
+  // ... sisa komponen Anda tidak berubah
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Manage Gallery</h1>
@@ -125,8 +131,14 @@ export default function GalleryPage() {
         <h2 className="text-xl font-bold mb-4">Existing Images</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {images.map((image) => (
-            <div key={image.id} className="relative group">
-              <img src={`${API_URL}/storage/${image.image_path}`} alt={image.title} className="rounded-lg object-cover w-full h-full" />
+            <div key={image.id} className="relative group aspect-square">
+              <Image
+                src={`${API_URL}/storage/${image.image_path}`}
+                alt={image.title || 'Gallery image'}
+                fill
+                className="rounded-lg object-cover"
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              />
               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity">
                 <p>{image.title}</p>
                 <Button

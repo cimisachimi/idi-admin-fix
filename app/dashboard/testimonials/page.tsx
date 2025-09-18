@@ -5,22 +5,8 @@ import { useState, useEffect, FormEvent } from 'react';
 import { Testimonial } from '@/types';
 import apiClient from '../../lib/apiCLient';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AxiosError } from 'axios'; // Import AxiosError
 
 export default function TestimonialsPage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -45,23 +32,22 @@ export default function TestimonialsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // State for the edit dialog
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const [editName, setEditName] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editMessage, setEditMessage] = useState('');
 
-
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await apiClient.get<Testimonial[]>('/api/testimonials');
+        const response = await apiClient.get<Testimonial[]>('/testimonials');
         setTestimonials(response.data);
-      } catch (err: any) {
-        setError(err.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to fetch testimonials.');
+      } catch (err) {
+        const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+        setError(axiosError.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to fetch testimonials.');
       } finally {
         setLoading(false);
       }
@@ -69,7 +55,6 @@ export default function TestimonialsPage() {
     if (token) fetchTestimonials();
   }, [token]);
 
-  // Populate edit form when a testimonial is selected
   useEffect(() => {
     if (selectedTestimonial) {
       setEditName(selectedTestimonial.name);
@@ -94,22 +79,24 @@ export default function TestimonialsPage() {
     };
 
     try {
-      const response = await apiClient.put<Testimonial>(`/api/testimonials/${selectedTestimonial.id}`, updatedData);
+      const response = await apiClient.put<Testimonial>(`/testimonials/${selectedTestimonial.id}`, updatedData);
       setTestimonials(
         testimonials.map((t) => (t.id === selectedTestimonial.id ? response.data : t))
       );
-      setEditDialogOpen(false); // Close dialog on success
-    } catch (err: any) {
-      setError(err.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to update testimonial.');
+      setEditDialogOpen(false);
+    } catch (err) {
+      const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+      setError(axiosError.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to update testimonial.');
     }
   };
 
   const handleDelete = async (testimonialId: number) => {
     try {
-      await apiClient.delete(`/api/testimonials/${testimonialId}`);
+      await apiClient.delete(`/testimonials/${testimonialId}`);
       setTestimonials(testimonials.filter((t) => t.id !== testimonialId));
-    } catch (err: any) {
-      setError(err.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to delete testimonial.');
+    } catch (err) {
+      const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+      setError(axiosError.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to delete testimonial.');
     }
   };
 
@@ -117,18 +104,19 @@ export default function TestimonialsPage() {
     e.preventDefault();
     setError('');
     try {
-      const response = await apiClient.post<Testimonial>('/api/testimonials', { name, title, message });
+      const response = await apiClient.post<Testimonial>('/testimonials', { name, title, message });
       setTestimonials([response.data, ...testimonials]);
       setName('');
       setTitle('');
       setMessage('');
-    } catch (err: any) {
-      setError(err.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to create testimonial.');
+    } catch (err) {
+      const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+      setError(axiosError.response?.status === 401 ? 'Unauthorized. Please login again.' : 'Failed to create testimonial.');
     }
   };
 
   if (loading) return <p>Loading...</p>;
-
+  // ... sisa komponen Anda tidak berubah
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Manage Testimonials</h1>

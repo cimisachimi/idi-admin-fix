@@ -8,7 +8,7 @@ export default function LogoutPage() {
   useEffect(() => {
     const logout = async () => {
       try {
-        await apiClient.post('/api/logout');
+        await apiClient.post('/logout');
       } catch (error) {
         console.error("Logout failed", error);
       } finally {
