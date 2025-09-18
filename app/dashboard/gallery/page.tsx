@@ -1,17 +1,25 @@
-// src/app/dashboard/gallery/page.tsx
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import Image from 'next/image'; // Import Image dari Next.js
+import Image from 'next/image';
 import { GalleryImage } from '@/types';
 import apiClient from '../../lib/apiCLient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AxiosError } from 'axios'; // Import AxiosError
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { AxiosError } from 'axios';
 
 export default function GalleryPage() {
   const [images, setImages] = useState<GalleryImage[]>([]);
@@ -19,15 +27,17 @@ export default function GalleryPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await apiClient.get<GalleryImage[]>('/galleries');
+        const response = await apiClient.get<GalleryImage[]>('/api/galleries');
         setImages(response.data);
       } catch (err) {
-        const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+        const axiosError = err as AxiosError;
         if (axiosError.response?.status === 401) {
           setError('Unauthorized. Please login again.');
         } else {
@@ -37,8 +47,8 @@ export default function GalleryPage() {
         setLoading(false);
       }
     };
-    if (token) fetchImages();
-  }, [token]);
+    fetchImages();
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,11 +63,15 @@ export default function GalleryPage() {
     formData.append('image', imageFile);
 
     try {
-      const response = await apiClient.post<GalleryImage>('/galleries', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await apiClient.post<GalleryImage>(
+        '/api/galleries',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       setImages([response.data, ...images]);
       setTitle('');
       setImageFile(null);
@@ -66,7 +80,7 @@ export default function GalleryPage() {
         fileInput.value = '';
       }
     } catch (err) {
-      const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+      const axiosError = err as AxiosError;
       if (axiosError.response?.status === 401) {
         setError('Unauthorized. Please login again.');
       } else {
@@ -76,12 +90,11 @@ export default function GalleryPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure?')) return;
     try {
-      await apiClient.delete(`/galleries/${id}`);
+      await apiClient.delete(`/api/galleries/${id}`);
       setImages(images.filter((img) => img.id !== id));
     } catch (err) {
-      const axiosError = err as AxiosError; // Berikan tipe yang spesifik
+      const axiosError = err as AxiosError;
       if (axiosError.response?.status === 401) {
         setError('Unauthorized. Please login again.');
       } else {
@@ -92,7 +105,6 @@ export default function GalleryPage() {
 
   if (loading) return <p>Loading...</p>;
 
-  // ... sisa komponen Anda tidak berubah
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Manage Gallery</h1>
@@ -116,7 +128,9 @@ export default function GalleryPage() {
               <Input
                 id="image"
                 type="file"
-                onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                onChange={(e) =>
+                  setImageFile(e.target.files ? e.target.files[0] : null)
+                }
                 required
               />
             </div>
@@ -129,30 +143,48 @@ export default function GalleryPage() {
 
       <div>
         <h2 className="text-xl font-bold mb-4">Existing Images</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {images.map((image) => (
-            <div key={image.id} className="relative group aspect-square">
-              <Image
-                src={`${API_URL}/storage/${image.image_path}`}
-                alt={image.title || 'Gallery image'}
-                fill
-                className="rounded-lg object-cover"
-                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                <p>{image.title}</p>
-                <Button
-                  onClick={() => handleDelete(image.id)}
-                  variant="destructive"
-                  size="sm"
-                  className="mt-1"
-                >
-                  Delete
-                </Button>
+        {images.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {images.map((image) => (
+              <div key={image.id} className="relative group aspect-square">
+                <Image
+                  src={`${API_URL}/storage/${image.image_path}`}
+                  alt={image.title || 'Gallery image'}
+                  fill
+                  className="rounded-lg object-cover"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="font-bold text-center p-2">{image.title}</p>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="mt-1">
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete the image.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(image.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p>No images found.</p>
+        )}
       </div>
     </div>
   );

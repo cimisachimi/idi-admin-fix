@@ -10,12 +10,10 @@ export default function LogoutPage() {
   useEffect(() => {
     const logout = async () => {
       try {
-        // This call will invalidate the session cookie
-        await apiClient.post('/logout');
+        await apiClient.post('/api/logout');
       } catch (error) {
-        console.error('Logout failed, but proceeding to log out client-side.', error);
+        console.error('Logout failed', error);
       } finally {
-        // Redirect to login page
         router.push('/');
       }
     };
@@ -23,5 +21,9 @@ export default function LogoutPage() {
     logout();
   }, [router]);
 
-  return <p>Logging out...</p>;
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <p>Logging out...</p>
+    </div>
+  );
 }

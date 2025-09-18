@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import apiClient, { getCsrfToken } from './lib/apiCLient';
+import apiClient from './lib/apiCLient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,46 +14,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [csrfReady, setCsrfReady] = useState(false);
   const router = useRouter();
 
-  // Fetch CSRF cookie when page loads
-  useEffect(() => {
-    (async () => {
-      try {
-        await getCsrfToken();
-        setCsrfReady(true);
-      } catch (err) {
-        console.error('Failed to fetch CSRF token', err);
-      }
-    })();
-  }, []);
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // Send login request
-      await apiClient.post('/login', { email, password });
+      // The CSRF token is handled automatically by Sanctum
+      await apiClient.get('/sanctum/csrf-cookie');
+      // Use the API login route
+      await apiClient.post('/api/login', { email, password });
 
-      // Redirect on success
       router.push('/dashboard');
     } catch (err) {
-      // The corrected type is used here
       const axiosError = err as AxiosError<{
         message?: string;
         errors?: Record<string, string[]>;
       }>;
 
-      // With the fix above, the 'as' cast on the next line is no longer needed,
-      // making the code cleaner, but it's fine to leave it.
       const errors = axiosError.response?.data?.errors;
-
       const errorMessage =
         axiosError.response?.data?.message ||
         (errors && Object.values(errors).flat()[0]) ||
-        'Login failed. Please check credentials.';
+        'Login failed. Please check your credentials.';
 
       setError(errorMessage as string);
     } finally {
@@ -95,7 +80,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading || !csrfReady}
+              disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
             </Button>
