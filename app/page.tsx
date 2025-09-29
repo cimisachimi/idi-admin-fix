@@ -23,7 +23,10 @@ export default function LoginPage() {
 
     try {
       // The CSRF token is handled automatically by Sanctum
-      await apiClient.get('/sanctum/csrf-cookie');
+      await apiClient.get('https://api.indocharcoalsupply.com/sanctum/csrf-cookie', {
+        withCredentials: true,
+      });
+
       // Use the API login route
       await apiClient.post('/api/login', { email, password });
 
