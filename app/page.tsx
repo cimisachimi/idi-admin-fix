@@ -51,7 +51,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            Admin Login
+            Admin Login IDI
           </CardTitle>
         </CardHeader>
         <CardContent>
